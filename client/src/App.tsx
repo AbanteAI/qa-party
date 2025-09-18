@@ -65,7 +65,7 @@ function App() {
           gap: '24px',
         }}
       >
-        <h1>Mentat Template JS</h1>
+        <h1>Mentat Party Agent 🥳</h1>
 
         {/* Tech stack */}
         <div
@@ -81,7 +81,11 @@ function App() {
             ['Backend', 'Node.js, Express, Jest'],
             ['Utilities', 'TypeScript, ESLint, Prettier'],
           ].map(([title, techs]) => (
-            <div className="section" style={{ textAlign: 'center' }} key={title}>
+            <div
+              className="section"
+              style={{ textAlign: 'center' }}
+              key={title}
+            >
               <div
                 style={{
                   fontWeight: '500',
