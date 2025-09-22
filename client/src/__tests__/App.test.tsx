@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../App';
 
@@ -13,28 +13,12 @@ type MessagesResponse = {
   }>;
 };
 
-type MessageResponse = {
-  message: {
-    id: string;
-    username: string;
-    text: string;
-    timestamp: number;
-  };
-};
-
 // Mock the fetch API
 globalThis.fetch = vi.fn() as unknown as typeof fetch;
 
 function mockMessagesResponse(messages: MessagesResponse['messages'] = []) {
   return {
     json: vi.fn().mockResolvedValue({ messages }),
-    ok: true,
-  };
-}
-
-function mockMessagePostResponse(message: MessageResponse['message']) {
-  return {
-    json: vi.fn().mockResolvedValue({ message }),
     ok: true,
   };
 }
