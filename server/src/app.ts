@@ -7,14 +7,53 @@ export const app = express();
 export const PORT = process.env.PORT || 5000;
 export const CLIENT_DIST_PATH = path.join(__dirname, '../../client/dist');
 
+// Message storage (in-memory for now)
+interface Message {
+  id: string;
+  username: string;
+  text: string;
+  timestamp: number;
+}
+
+let messages: Message[] = [];
+
 // Middleware
 app.use(cors()); // Enable CORS for frontend communication
 app.use(express.json()); // Parse JSON bodies
 app.use(express.static(CLIENT_DIST_PATH)); // Serve static files from client/dist
 
-// Basic route
+// Chat API routes
+app.get('/api/messages', (req: Request, res: Response) => {
+  res.json({ messages });
+});
+
+app.post('/api/messages', (req: Request, res: Response) => {
+  const { username, text } = req.body;
+
+  if (!username || !text) {
+    return res.status(400).json({ error: 'Username and text are required' });
+  }
+
+  const message: Message = {
+    id: Date.now().toString(),
+    username: username.trim(),
+    text: text.trim(),
+    timestamp: Date.now(),
+  };
+
+  messages.push(message);
+
+  // Keep only last 100 messages to prevent memory issues
+  if (messages.length > 100) {
+    messages = messages.slice(-100);
+  }
+
+  res.json({ message });
+});
+
+// Basic route (keeping for compatibility)
 app.get('/api', (req: Request, res: Response) => {
-  res.json({ message: 'Welcome to the Mentat API!' });
+  res.json({ message: 'Welcome to the Mentat Party Agent API!' });
 });
 
 // Serve React app or fallback page
