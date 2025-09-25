@@ -1,11 +1,12 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import path from 'path';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, appendFileSync } from 'fs';
 
 export const app = express();
 export const PORT = process.env.PORT || 5000;
 export const CLIENT_DIST_PATH = path.join(__dirname, '../../client/dist');
+export const BULLETINS_FILE = path.join(__dirname, '../../../bulletins.txt');
 
 // Middleware
 app.use(cors()); // Enable CORS for frontend communication
@@ -15,6 +16,68 @@ app.use(express.static(CLIENT_DIST_PATH)); // Serve static files from client/dis
 // Basic route
 app.get('/api', (req: Request, res: Response) => {
   res.json({ message: 'Welcome to the Mentat API!' });
+});
+
+// Bulletin board routes
+app.get('/api/bulletins', (req: Request, res: Response) => {
+  try {
+    if (!existsSync(BULLETINS_FILE)) {
+      return res.json({ bulletins: [] });
+    }
+
+    const fileContent = readFileSync(BULLETINS_FILE, 'utf-8');
+    const lines = fileContent
+      .trim()
+      .split('\n')
+      .filter((line) => line.length > 0);
+
+    const bulletins = lines
+      .map((line) => {
+        const [timestamp, ...messageParts] = line.split(' | ');
+        return {
+          id: timestamp,
+          timestamp,
+          message: messageParts.join(' | '),
+        };
+      })
+      .reverse(); // Show newest first
+
+    res.json({ bulletins });
+  } catch (error) {
+    console.error('Error reading bulletins:', error);
+    res.status(500).json({ error: 'Failed to read bulletins' });
+  }
+});
+
+app.post('/api/bulletins', (req: Request, res: Response) => {
+  try {
+    const { message } = req.body;
+
+    if (
+      !message ||
+      typeof message !== 'string' ||
+      message.trim().length === 0
+    ) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    const timestamp = new Date().toISOString();
+    const bulletinLine = `${timestamp} | ${message.trim()}\n`;
+
+    appendFileSync(BULLETINS_FILE, bulletinLine);
+
+    res.json({
+      success: true,
+      bulletin: {
+        id: timestamp,
+        timestamp,
+        message: message.trim(),
+      },
+    });
+  } catch (error) {
+    console.error('Error saving bulletin:', error);
+    res.status(500).json({ error: 'Failed to save bulletin' });
+  }
 });
 
 // Serve React app or fallback page
