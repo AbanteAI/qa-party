@@ -1,66 +1,101 @@
-import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import App from '../App';
 
-// Define types
-type ApiResponse = {
-  message: string;
+// Mock Socket.io
+const mockSocket = {
+  on: vi.fn(),
+  emit: vi.fn(),
+  close: vi.fn(),
 };
 
-// Mock the fetch API
-globalThis.fetch = vi.fn() as unknown as typeof fetch;
+vi.mock('socket.io-client', () => ({
+  io: vi.fn(() => mockSocket),
+}));
 
-function mockFetchResponse(data: ApiResponse) {
-  return {
-    json: vi.fn().mockResolvedValue(data),
-    ok: true,
-  };
-}
-
-describe('App Component', () => {
+describe('Chat Room App', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default mock implementation
-    (globalThis.fetch as unknown as Mock).mockResolvedValue(
-      mockFetchResponse({ message: 'Test Message from API' })
-    );
   });
 
-  it('renders App component correctly', () => {
+  it('renders username entry screen initially', () => {
     render(<App />);
-    expect(screen.getByText('Mentat Template JS')).toBeInTheDocument();
-    expect(screen.getByText(/Frontend: React, Vite/)).toBeInTheDocument();
-    expect(screen.getByText(/Backend: Node.js, Express/)).toBeInTheDocument();
+
+    expect(screen.getByText('Mentat Chat Room')).toBeInTheDocument();
     expect(
-      screen.getByText(/Utilities: Typescript, ESLint, Prettier/)
+      screen.getByPlaceholderText('Enter your username')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Join Chat' })
     ).toBeInTheDocument();
   });
 
-  it('loads and displays API message', async () => {
+  it('disables join button when username is empty', () => {
     render(<App />);
 
-    // Should initially show loading message
-    expect(screen.getByText(/Loading message from server/)).toBeInTheDocument();
-
-    // Wait for the fetch to resolve and check if the message is displayed
-    await waitFor(() => {
-      expect(screen.getByText('Test Message from API')).toBeInTheDocument();
-    });
-
-    expect(globalThis.fetch).toHaveBeenCalledWith('/api');
+    const joinButton = screen.getByRole('button', { name: 'Join Chat' });
+    expect(joinButton).toBeDisabled();
   });
 
-  it('handles API error', async () => {
-    // Mock a failed API call
-    (globalThis.fetch as unknown as Mock).mockRejectedValue(
-      new Error('API Error')
-    );
-
+  it('enables join button when username is entered', async () => {
+    const user = userEvent.setup();
     render(<App />);
 
-    // Wait for the error message to appear
-    await waitFor(() => {
-      expect(screen.getByText(/Error: API Error/)).toBeInTheDocument();
-    });
+    const usernameInput = screen.getByPlaceholderText('Enter your username');
+    const joinButton = screen.getByRole('button', { name: 'Join Chat' });
+
+    await user.type(usernameInput, 'testuser');
+    expect(joinButton).toBeEnabled();
+  });
+
+  it('emits join event when form is submitted', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const usernameInput = screen.getByPlaceholderText('Enter your username');
+    const joinButton = screen.getByRole('button', { name: 'Join Chat' });
+
+    await user.type(usernameInput, 'testuser');
+    await user.click(joinButton);
+
+    expect(mockSocket.emit).toHaveBeenCalledWith('join', 'testuser');
+  });
+
+  it('sets up socket event listeners on mount', () => {
+    render(<App />);
+
+    expect(mockSocket.on).toHaveBeenCalledWith(
+      'message_history',
+      expect.any(Function)
+    );
+    expect(mockSocket.on).toHaveBeenCalledWith(
+      'new_message',
+      expect.any(Function)
+    );
+    expect(mockSocket.on).toHaveBeenCalledWith(
+      'users_update',
+      expect.any(Function)
+    );
+    expect(mockSocket.on).toHaveBeenCalledWith(
+      'user_joined',
+      expect.any(Function)
+    );
+    expect(mockSocket.on).toHaveBeenCalledWith(
+      'user_left',
+      expect.any(Function)
+    );
+    expect(mockSocket.on).toHaveBeenCalledWith(
+      'chat_error',
+      expect.any(Function)
+    );
+  });
+
+  it('closes socket connection on unmount', () => {
+    const { unmount } = render(<App />);
+
+    unmount();
+
+    expect(mockSocket.close).toHaveBeenCalled();
   });
 });
