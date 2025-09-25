@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import mentatLogo from '/mentat.png';
 
 function App() {
@@ -9,7 +9,7 @@ function App() {
   // Polling state
   const [log, setLog] = useState<string[]>([]);
   const [input, setInput] = useState('');
-  const [latestId, setLatestId] = useState(0);
+  const latestIdRef = useRef(0);
 
   useEffect(() => {
     const fetchBackendMessage = async () => {
@@ -38,23 +38,24 @@ function App() {
     fetchBackendMessage();
   }, []);
 
-  // Poll every 1s for new messages
+  // Poll every 1s for new messages (stable background loop)
   useEffect(() => {
     let cancelled = false;
     const tick = async () => {
       try {
-        const res = await fetch(`/messages?sinceId=${latestId}`);
+        const res = await fetch(`/messages?sinceId=${latestIdRef.current}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: {
           messages: { id: number; text: string }[];
           latestId: number;
         } = await res.json();
-        if (!cancelled && data.messages.length) {
+        if (cancelled) return;
+        if (data.messages.length) {
           setLog((prev) => [
             ...prev,
             ...data.messages.map((m) => `Server: ${m.text}`),
           ]);
-          setLatestId(data.latestId);
+          latestIdRef.current = data.latestId;
         }
       } catch {
         // ignore transient polling errors
@@ -67,7 +68,7 @@ function App() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [latestId]);
+  }, []);
 
   const sendMessage = async () => {
     const text = input || 'Hello';
@@ -81,7 +82,8 @@ function App() {
     });
     if (res.ok) {
       const created: { id: number } = await res.json();
-      setLatestId((prev) => Math.max(prev, created.id));
+      // Advance the ref so next poll only fetches newer items
+      latestIdRef.current = Math.max(latestIdRef.current, created.id);
     }
   };
 
