@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import mentatLogo from '/mentat.png';
 
 function App() {
@@ -56,7 +56,7 @@ function App() {
           ]);
           setLatestId(data.latestId);
         }
-      } catch (e) {
+      } catch {
         // ignore transient polling errors
       }
     };
