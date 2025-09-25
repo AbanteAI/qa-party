@@ -33,7 +33,9 @@ function App() {
   }, [messages]);
 
   useEffect(() => {
-    const newSocket = io('http://localhost:5000');
+    // Use same-origin in production, explicit localhost in dev
+    const socketUrl = import.meta.env.DEV ? 'http://localhost:5000' : undefined;
+    const newSocket = io(socketUrl);
     setSocket(newSocket);
 
     // Socket event listeners
@@ -73,7 +75,7 @@ function App() {
       ]);
     });
 
-    newSocket.on('error', (errorMessage: string) => {
+    newSocket.on('chat_error', (errorMessage: string) => {
       setError(errorMessage);
     });
 

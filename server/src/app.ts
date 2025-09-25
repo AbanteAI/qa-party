@@ -9,7 +9,10 @@ export const app = express();
 export const server = createServer(app);
 export const io = new SocketIOServer(server, {
   cors: {
-    origin: 'http://localhost:5173',
+    origin:
+      process.env.NODE_ENV === 'production'
+        ? true
+        : ['http://localhost:5173', 'http://localhost:5000'],
     methods: ['GET', 'POST'],
   },
 });
@@ -50,7 +53,7 @@ io.on('connection', (socket) => {
   // Handle user joining
   socket.on('join', (username: string) => {
     if (!username || username.trim() === '') {
-      socket.emit('error', 'Username is required');
+      socket.emit('chat_error', 'Username is required');
       return;
     }
 
@@ -78,12 +81,12 @@ io.on('connection', (socket) => {
   socket.on('send_message', (text: string) => {
     const user = users.get(socket.id);
     if (!user) {
-      socket.emit('error', 'You must join the chat first');
+      socket.emit('chat_error', 'You must join the chat first');
       return;
     }
 
     if (!text || text.trim() === '') {
-      socket.emit('error', 'Message cannot be empty');
+      socket.emit('chat_error', 'Message cannot be empty');
       return;
     }
 
