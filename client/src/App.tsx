@@ -6,11 +6,10 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // WebSocket state
-  const [wsConnected, setWsConnected] = useState(false);
-  const [wsLog, setWsLog] = useState<string[]>([]);
+  // Polling state
+  const [log, setLog] = useState<string[]>([]);
   const [input, setInput] = useState('');
-  const wsRef = useRef<WebSocket | null>(null);
+  const [latestId, setLatestId] = useState(0);
 
   useEffect(() => {
     const fetchBackendMessage = async () => {
@@ -39,53 +38,51 @@ function App() {
     fetchBackendMessage();
   }, []);
 
-  // Setup WebSocket connection
+  // Poll every 1s for new messages
   useEffect(() => {
-    // Use relative path so it works in dev (via Vite proxy) and prod
-    const wsUrl = location.origin.replace(/^http/, 'ws') + '/socket';
-
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      setWsConnected(true);
-      setWsLog((prev) => [...prev, 'Connected to WebSocket']);
-    };
-
-    ws.onmessage = (evt) => {
+    let cancelled = false;
+    const tick = async () => {
       try {
-        const data = JSON.parse(evt.data);
-        if (data.type === 'welcome') {
-          setWsLog((prev) => [...prev, `Server: ${data.message}`]);
-        } else if (data.type === 'echo') {
-          setWsLog((prev) => [...prev, `Echo: ${data.message}`]);
-        } else {
-          setWsLog((prev) => [...prev, `Message: ${evt.data}`]);
+        const res = await fetch(`/messages?sinceId=${latestId}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data: {
+          messages: { id: number; text: string }[];
+          latestId: number;
+        } = await res.json();
+        if (!cancelled && data.messages.length) {
+          setLog((prev) => [
+            ...prev,
+            ...data.messages.map((m) => `Server: ${m.text}`),
+          ]);
+          setLatestId(data.latestId);
         }
-      } catch {
-        setWsLog((prev) => [...prev, `Message: ${evt.data}`]);
+      } catch (e) {
+        // ignore transient polling errors
       }
     };
-
-    ws.onclose = () => {
-      setWsConnected(false);
-      setWsLog((prev) => [...prev, 'Disconnected from WebSocket']);
-    };
-
-    ws.onerror = () => {
-      setWsLog((prev) => [...prev, 'WebSocket error']);
-    };
-
+    const id = setInterval(tick, 1000);
+    // run once immediately
+    tick();
     return () => {
-      ws.close();
+      cancelled = true;
+      clearInterval(id);
     };
-  }, []);
+  }, [latestId]);
 
-  const sendMessage = () => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
-    wsRef.current.send(input || 'Hello');
-    setWsLog((prev) => [...prev, `You: ${input || 'Hello'}`]);
+  const sendMessage = async () => {
+    const text = input || 'Hello';
     setInput('');
+    // Optimistic append
+    setLog((prev) => [...prev, `You: ${text}`]);
+    const res = await fetch('/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    if (res.ok) {
+      const created: { id: number } = await res.json();
+      setLatestId((prev) => Math.max(prev, created.id));
+    }
   };
 
   return (
@@ -183,7 +180,7 @@ function App() {
           </div>
         </div>
 
-        {/* WebSocket Echo Demo */}
+        {/* Simple messaging via HTTP + polling */}
         <div className="section">
           <div
             style={{
@@ -193,13 +190,7 @@ function App() {
               marginBottom: '8px',
             }}
           >
-            WebSocket Echo
-          </div>
-          <div style={{ marginBottom: '8px', fontSize: '13px' }}>
-            Status:{' '}
-            <span style={{ color: wsConnected ? '#16a34a' : '#dc2626' }}>
-              {wsConnected ? 'Connected' : 'Disconnected'}
-            </span>
+            Simple Messages (1s polling)
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <input
@@ -216,15 +207,14 @@ function App() {
             />
             <button
               onClick={sendMessage}
-              disabled={!wsConnected}
               style={{
                 padding: '8px 12px',
                 borderRadius: 6,
                 border: '1px solid #1f2937',
-                backgroundColor: wsConnected ? '#111827' : '#9ca3af',
+                backgroundColor: '#111827',
                 color: 'white',
                 fontSize: 14,
-                cursor: wsConnected ? 'pointer' : 'not-allowed',
+                cursor: 'pointer',
               }}
             >
               Send
@@ -243,12 +233,12 @@ function App() {
               padding: 8,
             }}
           >
-            {wsLog.length === 0 ? (
+            {log.length === 0 ? (
               <div style={{ color: '#6b7280', fontStyle: 'italic' }}>
                 No messages yet. Type above and press Send.
               </div>
             ) : (
-              wsLog.map((line, i) => <div key={i}>• {line}</div>)
+              log.map((line, i) => <div key={i}>• {line}</div>)
             )}
           </div>
         </div>

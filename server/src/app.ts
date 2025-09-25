@@ -17,6 +17,34 @@ app.get('/api', (req: Request, res: Response) => {
   res.json({ message: 'Welcome to the Mentat API!' });
 });
 
+/**
+ * Simple in-memory message store for polling demo
+ */
+type Message = { id: number; text: string; ts: number };
+const messages: Message[] = [];
+let nextId = 1;
+
+// Post a new message
+app.post('/messages', (req: Request, res: Response) => {
+  const text = String(req.body?.text ?? '').trim();
+  if (!text) {
+    return res.status(400).json({ error: 'text is required' });
+  }
+  const msg: Message = { id: nextId++, text, ts: Date.now() };
+  messages.push(msg);
+  res.status(201).json(msg);
+});
+
+// Poll for messages after a given id
+app.get('/messages', (req: Request, res: Response) => {
+  const sinceId = Number(req.query.sinceId ?? 0);
+  const result = messages.filter((m) => m.id > sinceId);
+  res.json({
+    messages: result,
+    latestId: messages.length ? messages[messages.length - 1].id : sinceId,
+  });
+});
+
 // Serve React app or fallback page
 app.get('*', (req: Request, res: Response) => {
   const indexPath = path.join(CLIENT_DIST_PATH, 'index.html');
