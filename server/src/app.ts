@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import path from 'path';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 
 export const app = express();
 export const PORT = process.env.PORT || 5000;
@@ -19,7 +19,7 @@ interface ChatMessage {
 // Ensure data directory exists
 const dataDir = path.dirname(MESSAGES_FILE);
 if (!existsSync(dataDir)) {
-  require('fs').mkdirSync(dataDir, { recursive: true });
+  mkdirSync(dataDir, { recursive: true });
 }
 
 // Initialize messages file if it doesn't exist
@@ -65,7 +65,7 @@ app.post('/api/messages', (req: Request, res: Response) => {
   }
 
   const newMessage: ChatMessage = {
-    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    id: Date.now().toString() + Math.random().toString(36).slice(2, 11),
     username: username.trim(),
     message: message.trim(),
     timestamp: new Date().toISOString(),
