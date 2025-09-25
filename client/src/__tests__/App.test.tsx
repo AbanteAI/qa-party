@@ -3,16 +3,19 @@ import { render, screen, waitFor } from '@testing-library/react';
 import App from '../App';
 
 // Define types
-type ApiResponse = {
+type ChatMessage = {
+  id: string;
+  username: string;
   message: string;
+  timestamp: string;
 };
 
 // Mock the fetch API
 globalThis.fetch = vi.fn() as unknown as typeof fetch;
 
-function mockFetchResponse(data: ApiResponse) {
+function mockMessagesResponse(messages: ChatMessage[]) {
   return {
-    json: vi.fn().mockResolvedValue(data),
+    json: vi.fn().mockResolvedValue(messages),
     ok: true,
   };
 }
@@ -20,34 +23,48 @@ function mockFetchResponse(data: ApiResponse) {
 describe('App Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default mock implementation
+    // Default mock implementation - empty messages array
     (globalThis.fetch as unknown as Mock).mockResolvedValue(
-      mockFetchResponse({ message: 'Test Message from API' })
+      mockMessagesResponse([])
     );
   });
 
-  it('renders App component correctly', () => {
+  it('renders chatroom component correctly', () => {
     render(<App />);
-    expect(screen.getByText('Mentat Template JS')).toBeInTheDocument();
-    expect(screen.getByText(/Frontend: React, Vite/)).toBeInTheDocument();
-    expect(screen.getByText(/Backend: Node.js, Express/)).toBeInTheDocument();
+    expect(screen.getByText('🎉 Mentat Party Chatroom')).toBeInTheDocument();
     expect(
-      screen.getByText(/Utilities: Typescript, ESLint, Prettier/)
+      screen.getByText('Welcome to the Mentat Party! 🎊')
     ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Your username')).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('Type your message...')
+    ).toBeInTheDocument();
+    expect(screen.getByText('Send')).toBeInTheDocument();
   });
 
-  it('loads and displays API message', async () => {
+  it('loads and displays messages', async () => {
+    const testMessages: ChatMessage[] = [
+      {
+        id: '1',
+        username: 'TestUser',
+        message: 'Hello World!',
+        timestamp: '2025-09-25T06:00:00.000Z',
+      },
+    ];
+
+    (globalThis.fetch as unknown as Mock).mockResolvedValue(
+      mockMessagesResponse(testMessages)
+    );
+
     render(<App />);
 
-    // Should initially show loading message
-    expect(screen.getByText(/Loading message from server/)).toBeInTheDocument();
-
-    // Wait for the fetch to resolve and check if the message is displayed
+    // Wait for the message to appear
     await waitFor(() => {
-      expect(screen.getByText('Test Message from API')).toBeInTheDocument();
+      expect(screen.getByText('Hello World!')).toBeInTheDocument();
+      expect(screen.getByText('<TestUser>')).toBeInTheDocument();
     });
 
-    expect(globalThis.fetch).toHaveBeenCalledWith('/api');
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/messages');
   });
 
   it('handles API error', async () => {
@@ -60,7 +77,7 @@ describe('App Component', () => {
 
     // Wait for the error message to appear
     await waitFor(() => {
-      expect(screen.getByText(/Error: API Error/)).toBeInTheDocument();
+      expect(screen.getByText(/Failed to fetch messages/)).toBeInTheDocument();
     });
   });
 });

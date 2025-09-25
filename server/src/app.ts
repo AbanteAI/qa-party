@@ -43,6 +43,7 @@ const saveMessages = (messages: ChatMessage[]): void => {
     writeFileSync(MESSAGES_FILE, JSON.stringify(messages, null, 2));
   } catch (error) {
     console.error('Error saving messages:', error);
+    throw error; // Re-throw to let caller handle the error
   }
 };
 
@@ -79,8 +80,14 @@ app.post('/api/messages', (req: Request, res: Response) => {
     messages.splice(0, messages.length - 100);
   }
 
-  saveMessages(messages);
-  res.json(newMessage);
+  try {
+    saveMessages(messages);
+    console.log('Message saved successfully:', newMessage.id);
+    res.json(newMessage);
+  } catch (error) {
+    console.error('Failed to persist message:', error);
+    res.status(500).json({ error: 'Failed to persist message' });
+  }
 });
 
 // Basic route for testing
