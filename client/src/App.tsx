@@ -28,6 +28,7 @@ function App() {
       }
       const data = await response.json();
       setMessages(data);
+      setError(null); // Clear any previous errors on successful fetch
     } catch (err) {
       console.error('Error fetching messages:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch messages');
@@ -37,10 +38,14 @@ function App() {
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log('Send message called', { username, currentMessage });
+
     if (!username.trim() || !currentMessage.trim()) {
+      console.log('Message blocked: empty username or message');
       return;
     }
 
+    console.log('Sending message...');
     setLoading(true);
     setError(null);
 
@@ -56,9 +61,14 @@ function App() {
         }),
       });
 
+      console.log('Response status:', response.status);
+
       if (!response.ok) {
         throw new Error(`HTTP error ${response.status}`);
       }
+
+      const result = await response.json();
+      console.log('Message sent successfully:', result);
 
       setCurrentMessage('');
       await fetchMessages(); // Refresh messages

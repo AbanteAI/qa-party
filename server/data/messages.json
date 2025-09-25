@@ -10,5 +10,11 @@
     "username": "TestUser",
     "message": "Testing if messages work now!",
     "timestamp": "2025-09-25T06:03:43.297Z"
+  },
+  {
+    "id": "17587804259065rr0vqxmd",
+    "username": "ProxyTest",
+    "message": "Testing through Vite proxy",
+    "timestamp": "2025-09-25T06:07:05.906Z"
   }
 ]
