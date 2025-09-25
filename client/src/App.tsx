@@ -18,9 +18,13 @@ function App() {
     // In development with forwarded ports, use the backend port directly
     if (window.location.hostname.includes('userdata.qa.mentat.ai')) {
       const backendUrl = window.location.origin.replace('-5173-', '-5000-');
+      console.log('Frontend URL:', window.location.origin);
+      console.log('Backend URL:', backendUrl);
+      console.log('Full API URL:', `${backendUrl}${endpoint}`);
       return `${backendUrl}${endpoint}`;
     }
     // For local development, use the proxy
+    console.log('Using proxy for:', endpoint);
     return endpoint;
   };
 
