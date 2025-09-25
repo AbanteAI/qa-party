@@ -23,7 +23,16 @@ function App() {
       const res = await fetch('/api/tweets');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      setTweets(data.tweets ?? []);
+      const raw = Array.isArray(data.tweets) ? data.tweets : [];
+      const safe: Tweet[] = raw.filter(
+        (t: any) =>
+          t &&
+          typeof t.id === 'string' &&
+          typeof t.text === 'string' &&
+          typeof t.likes === 'number' &&
+          typeof t.createdAt === 'number'
+      );
+      setTweets(safe);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load tweets');
     } finally {
@@ -53,8 +62,19 @@ function App() {
       }
       const { tweet } = await res.json();
       setText('');
-      // Prepend newly created tweet optimistically
-      setTweets((prev) => [tweet, ...prev]);
+      // Prepend newly created tweet optimistically (defensive)
+      if (
+        tweet &&
+        typeof tweet.id === 'string' &&
+        typeof tweet.text === 'string' &&
+        typeof tweet.likes === 'number' &&
+        typeof tweet.createdAt === 'number'
+      ) {
+        setTweets((prev) => [tweet, ...prev]);
+      } else {
+        // Fallback: refetch full list if shape unexpected
+        fetchTweets();
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to post tweet');
     } finally {
@@ -187,7 +207,7 @@ function App() {
               Be the first to post!
             </div>
           ) : (
-            tweets.map((t) => (
+            tweets.filter(Boolean).map((t) => (
               <div
                 key={t.id}
                 style={{
