@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import path from 'path';
 import { existsSync } from 'fs';
+import { promises as fsp } from 'fs';
 
 export const app = express();
 export const PORT = process.env.PORT || 5000;
@@ -15,6 +16,73 @@ app.use(express.static(CLIENT_DIST_PATH)); // Serve static files from client/dis
 // Basic route
 app.get('/api', (req: Request, res: Response) => {
   res.json({ message: 'Welcome to the Mentat API!' });
+});
+
+/**
+ * Simple in-memory message store for polling demo
+ */
+type Message = { id: number; text: string; ts: number };
+const messages: Message[] = [];
+let nextId = 1;
+
+// Persist messages to a simple JSON file for demo purposes
+const DATA_DIR = path.join(__dirname, '../../persist');
+const DATA_FILE = path.join(DATA_DIR, 'messages.json');
+
+// Load messages at startup
+(async () => {
+  try {
+    if (existsSync(DATA_FILE)) {
+      const raw = await fsp.readFile(DATA_FILE, 'utf-8');
+      const parsed: Message[] = JSON.parse(raw);
+      messages.push(...parsed);
+      nextId = parsed.reduce((max, m) => Math.max(max, m.id), 0) + 1;
+    } else {
+      // ensure directory exists
+      await fsp.mkdir(DATA_DIR, { recursive: true });
+      await fsp.writeFile(
+        DATA_FILE,
+        JSON.stringify(messages, null, 2),
+        'utf-8'
+      );
+    }
+  } catch (e) {
+    // Non-fatal: keep in-memory only if persistence fails
+     
+    console.warn('Failed to load persisted messages:', e);
+  }
+})();
+
+async function persistMessages() {
+  try {
+    await fsp.writeFile(DATA_FILE, JSON.stringify(messages, null, 2), 'utf-8');
+  } catch (e) {
+     
+    console.warn('Failed to persist messages:', e);
+  }
+}
+
+// Post a new message
+app.post('/messages', (req: Request, res: Response) => {
+  const text = String(req.body?.text ?? '').trim();
+  if (!text) {
+    return res.status(400).json({ error: 'text is required' });
+  }
+  const msg: Message = { id: nextId++, text, ts: Date.now() };
+  messages.push(msg);
+  // fire-and-forget persistence
+  void persistMessages();
+  res.status(201).json(msg);
+});
+
+// Poll for messages after a given id
+app.get('/messages', (req: Request, res: Response) => {
+  const sinceId = Number(req.query.sinceId ?? 0);
+  const result = messages.filter((m) => m.id > sinceId);
+  res.json({
+    messages: result,
+    latestId: messages.length ? messages[messages.length - 1].id : sinceId,
+  });
 });
 
 // Serve React app or fallback page

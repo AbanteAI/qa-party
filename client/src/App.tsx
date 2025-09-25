@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import mentatLogo from '/mentat.png';
 
 function App() {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Polling state
+  const [log, setLog] = useState<string[]>([]);
+  const [input, setInput] = useState('');
+  const latestIdRef = useRef(0);
 
   useEffect(() => {
     const fetchBackendMessage = async () => {
@@ -33,6 +38,55 @@ function App() {
     fetchBackendMessage();
   }, []);
 
+  // Poll every 1s for new messages (stable background loop)
+  useEffect(() => {
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const res = await fetch(`/messages?sinceId=${latestIdRef.current}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data: {
+          messages: { id: number; text: string }[];
+          latestId: number;
+        } = await res.json();
+        if (cancelled) return;
+        if (data.messages.length) {
+          setLog((prev) => [
+            ...prev,
+            ...data.messages.map((m) => `Server: ${m.text}`),
+          ]);
+          latestIdRef.current = data.latestId;
+        }
+      } catch {
+        // ignore transient polling errors
+      }
+    };
+    const id = setInterval(tick, 1000);
+    // run once immediately
+    tick();
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
+
+  const sendMessage = async () => {
+    const text = input || 'Hello';
+    setInput('');
+    // Optimistic append
+    setLog((prev) => [...prev, `You: ${text}`]);
+    const res = await fetch('/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    if (res.ok) {
+      const created: { id: number } = await res.json();
+      // Advance the ref so next poll only fetches newer items
+      latestIdRef.current = Math.max(latestIdRef.current, created.id);
+    }
+  };
+
   return (
     <div
       style={{
@@ -40,7 +94,7 @@ function App() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        height: '100vh',
+        minHeight: '100vh',
         width: '100vw',
         justifyContent: 'center',
         padding: '20px',
@@ -59,7 +113,7 @@ function App() {
       <div
         className="paper"
         style={{
-          maxWidth: '500px',
+          maxWidth: '560px',
           display: 'flex',
           flexDirection: 'column',
           gap: '24px',
@@ -81,7 +135,11 @@ function App() {
             ['Backend', 'Node.js, Express, Jest'],
             ['Utilities', 'TypeScript, ESLint, Prettier'],
           ].map(([title, techs]) => (
-            <div className="section" style={{ textAlign: 'center' }} key={title}>
+            <div
+              className="section"
+              style={{ textAlign: 'center' }}
+              key={title}
+            >
               <div
                 style={{
                   fontWeight: '500',
@@ -120,6 +178,69 @@ function App() {
               <span style={{ color: '#6b7280', fontStyle: 'italic' }}>
                 No message from server
               </span>
+            )}
+          </div>
+        </div>
+
+        {/* Simple messaging via HTTP + polling */}
+        <div className="section">
+          <div
+            style={{
+              fontSize: '14px',
+              fontWeight: '500',
+              color: '#1f2937',
+              marginBottom: '8px',
+            }}
+          >
+            Simple Messages (1s polling)
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type a message"
+              style={{
+                flex: 1,
+                padding: '8px 10px',
+                borderRadius: 6,
+                border: '1px solid #e5e7eb',
+                fontSize: 14,
+              }}
+            />
+            <button
+              onClick={sendMessage}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 6,
+                border: '1px solid #1f2937',
+                backgroundColor: '#111827',
+                color: 'white',
+                fontSize: 14,
+                cursor: 'pointer',
+              }}
+            >
+              Send
+            </button>
+          </div>
+          <div
+            style={{
+              marginTop: '12px',
+              maxHeight: 180,
+              overflow: 'auto',
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+              fontSize: 12,
+              background: '#f8fafc',
+              border: '1px solid #e5e7eb',
+              borderRadius: 8,
+              padding: 8,
+            }}
+          >
+            {log.length === 0 ? (
+              <div style={{ color: '#6b7280', fontStyle: 'italic' }}>
+                No messages yet. Type above and press Send.
+              </div>
+            ) : (
+              log.map((line, i) => <div key={i}>• {line}</div>)
             )}
           </div>
         </div>

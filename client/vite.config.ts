@@ -10,6 +10,12 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
+      // Proxy WebSocket connections in dev so we can use relative ws path
+      '/socket': {
+        target: 'ws://localhost:5000',
+        changeOrigin: true,
+        ws: true,
+      },
     },
   },
 });
