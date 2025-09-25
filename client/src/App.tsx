@@ -42,7 +42,7 @@ function App() {
   // Setup WebSocket connection
   useEffect(() => {
     // Use relative path so it works in dev (via Vite proxy) and prod
-    const wsUrl = location.origin.replace(/^http/, 'ws') + '/ws';
+    const wsUrl = location.origin.replace(/^http/, 'ws') + '/socket';
 
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;

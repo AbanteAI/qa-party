@@ -7,7 +7,7 @@ const server = app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
-const wss = new WebSocketServer({ server, path: '/ws' });
+const wss = new WebSocketServer({ server, path: '/socket' });
 
 wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
   console.log('WebSocket client connected', req.socket.remoteAddress);
