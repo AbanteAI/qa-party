@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import path from 'path';
-import { existsSync, readFileSync, writeFileSync, appendFileSync } from 'fs';
+import { existsSync, readFileSync, appendFileSync } from 'fs';
 
 export const app = express();
 export const PORT = process.env.PORT || 5000;
