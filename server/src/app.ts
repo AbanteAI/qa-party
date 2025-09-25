@@ -54,14 +54,21 @@ app.use(express.static(CLIENT_DIST_PATH)); // Serve static files from client/dis
 
 // Chat API routes
 app.get('/api/messages', (req: Request, res: Response) => {
+  console.log('GET /api/messages - Fetching messages');
   const messages = getMessages();
+  console.log(`GET /api/messages - Returning ${messages.length} messages`);
   res.json(messages);
 });
 
 app.post('/api/messages', (req: Request, res: Response) => {
+  console.log('POST /api/messages - Received request');
+  console.log('Request body:', req.body);
+  console.log('Request headers:', req.headers);
+
   const { username, message } = req.body;
 
   if (!username || !message) {
+    console.log('POST /api/messages - Missing username or message');
     return res.status(400).json({ error: 'Username and message are required' });
   }
 
@@ -72,7 +79,10 @@ app.post('/api/messages', (req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
   };
 
+  console.log('POST /api/messages - Created new message:', newMessage);
+
   const messages = getMessages();
+  console.log(`POST /api/messages - Current message count: ${messages.length}`);
   messages.push(newMessage);
 
   // Keep only the last 100 messages to prevent file from growing too large
@@ -80,12 +90,21 @@ app.post('/api/messages', (req: Request, res: Response) => {
     messages.splice(0, messages.length - 100);
   }
 
+  console.log(
+    `POST /api/messages - Message count after adding: ${messages.length}`
+  );
+
   try {
+    console.log('POST /api/messages - Attempting to save messages to file');
     saveMessages(messages);
-    console.log('Message saved successfully:', newMessage.id);
+    console.log(
+      'POST /api/messages - Message saved successfully:',
+      newMessage.id
+    );
+    console.log('POST /api/messages - Sending response');
     res.json(newMessage);
   } catch (error) {
-    console.error('Failed to persist message:', error);
+    console.error('POST /api/messages - Failed to persist message:', error);
     res.status(500).json({ error: 'Failed to persist message' });
   }
 });

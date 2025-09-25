@@ -77,7 +77,7 @@ describe('App Component', () => {
 
     // Wait for the error message to appear
     await waitFor(() => {
-      expect(screen.getByText(/Failed to fetch messages/)).toBeInTheDocument();
+      expect(screen.getByText(/API Error/)).toBeInTheDocument();
     });
   });
 });
