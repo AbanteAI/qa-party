@@ -1,5 +1,5 @@
 {
-  "name": "mentat-template-js",
+  "name": "mentat-party-agent",
   "type": "module",
   "scripts": {
     "install": "npm install --prefix client && npm install --prefix server",
