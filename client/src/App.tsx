@@ -8,6 +8,17 @@ type Tweet = {
   createdAt: number;
 };
 
+function isTweet(x: unknown): x is Tweet {
+  if (typeof x !== 'object' || x === null) return false;
+  const t = x as Record<string, unknown>;
+  return (
+    typeof t.id === 'string' &&
+    typeof t.text === 'string' &&
+    typeof t.likes === 'number' &&
+    typeof t.createdAt === 'number'
+  );
+}
+
 function App() {
   const [tweets, setTweets] = useState<Tweet[]>([]);
   const [text, setText] = useState('');
@@ -24,14 +35,7 @@ function App() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const raw = Array.isArray(data.tweets) ? data.tweets : [];
-      const safe: Tweet[] = raw.filter(
-        (t: any) =>
-          t &&
-          typeof t.id === 'string' &&
-          typeof t.text === 'string' &&
-          typeof t.likes === 'number' &&
-          typeof t.createdAt === 'number'
-      );
+      const safe: Tweet[] = raw.filter(isTweet);
       setTweets(safe);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load tweets');

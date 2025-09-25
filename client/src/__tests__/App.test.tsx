@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import App from '../App';
 
-type FetchResponse = {
-  json: () => Promise<any>;
+type FetchResponse<T> = {
+  json: () => Promise<T>;
   ok: boolean;
   status?: number;
 };
@@ -11,7 +11,11 @@ type FetchResponse = {
 // Mock the fetch API
 globalThis.fetch = vi.fn() as unknown as typeof fetch;
 
-function mockFetchResponse(data: any, ok = true, status = 200): FetchResponse {
+function mockFetchResponse<T extends object>(
+  data: T,
+  ok = true,
+  status = 200
+): FetchResponse<T> {
   return {
     json: vi.fn().mockResolvedValue(data),
     ok,
@@ -30,9 +34,13 @@ describe('App - Micro feed', () => {
       (input: RequestInfo | URL) => {
         const url = typeof input === 'string' ? input : input.toString();
         if (url.includes('/api/tweets')) {
-          return Promise.resolve(mockFetchResponse({ tweets: [] }));
+          return Promise.resolve(
+            mockFetchResponse<{ tweets: unknown[] }>({ tweets: [] })
+          );
         }
-        return Promise.resolve(mockFetchResponse({}, true, 200));
+        return Promise.resolve(
+          mockFetchResponse<Record<string, never>>({}, true, 200)
+        );
       }
     );
 
@@ -58,12 +66,18 @@ describe('App - Micro feed', () => {
         const url = typeof input === 'string' ? input : input.toString();
         const method = init?.method || 'GET';
         if (url.includes('/api/tweets') && method === 'GET') {
-          return Promise.resolve(mockFetchResponse({ tweets: [] }));
+          return Promise.resolve(
+            mockFetchResponse<{ tweets: unknown[] }>({ tweets: [] })
+          );
         }
         if (url.endsWith('/api/tweets') && method === 'POST') {
-          return Promise.resolve(mockFetchResponse({ tweet: newTweet }));
+          return Promise.resolve(
+            mockFetchResponse<{ tweet: typeof newTweet }>({ tweet: newTweet })
+          );
         }
-        return Promise.resolve(mockFetchResponse({}, true, 200));
+        return Promise.resolve(
+          mockFetchResponse<Record<string, never>>({}, true, 200)
+        );
       }
     );
 
@@ -97,12 +111,20 @@ describe('App - Micro feed', () => {
         const method = init?.method || 'GET';
 
         if (url.includes('/api/tweets') && method === 'GET') {
-          return Promise.resolve(mockFetchResponse({ tweets: [t0] }));
+          return Promise.resolve(
+            mockFetchResponse<{ tweets: unknown[] }>({
+              tweets: [t0] as unknown[],
+            })
+          );
         }
         if (url.endsWith(`/api/tweets/${t0.id}/like`) && method === 'POST') {
-          return Promise.resolve(mockFetchResponse({ tweet: t1 }));
+          return Promise.resolve(
+            mockFetchResponse<{ tweet: typeof t1 }>({ tweet: t1 })
+          );
         }
-        return Promise.resolve(mockFetchResponse({}, true, 200));
+        return Promise.resolve(
+          mockFetchResponse<Record<string, never>>({}, true, 200)
+        );
       }
     );
 
