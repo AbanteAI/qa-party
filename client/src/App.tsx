@@ -17,7 +17,12 @@ function App() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (
+      messagesEndRef.current &&
+      typeof messagesEndRef.current.scrollIntoView === 'function'
+    ) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const fetchMessages = async () => {
@@ -50,25 +55,38 @@ function App() {
     setError(null);
 
     try {
-      const response = await fetch('/api/messages', {
+      const requestUrl = '/api/messages';
+      const requestBody = {
+        username: username.trim(),
+        message: currentMessage.trim(),
+      };
+
+      console.log('Making POST request to:', requestUrl);
+      console.log('Request body:', requestBody);
+
+      const response = await fetch(requestUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          username: username.trim(),
-          message: currentMessage.trim(),
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       console.log('Response status:', response.status);
+      console.log(
+        'Response headers:',
+        Object.fromEntries(response.headers.entries())
+      );
 
       if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
+        const errorText = await response.text();
+        console.log('Error response body:', errorText);
+        throw new Error(`HTTP error ${response.status}: ${errorText}`);
       }
 
       const result = await response.json();
       console.log('Message sent successfully:', result);
+      console.log('Response URL was:', response.url);
 
       setCurrentMessage('');
       await fetchMessages(); // Refresh messages
