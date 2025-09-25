@@ -14,12 +14,22 @@ function App() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const getApiUrl = (endpoint: string) => {
+    // In development with forwarded ports, use the backend port directly
+    if (window.location.hostname.includes('userdata.qa.mentat.ai')) {
+      const backendUrl = window.location.origin.replace('-5173-', '-5000-');
+      return `${backendUrl}${endpoint}`;
+    }
+    // For local development, use the proxy
+    return endpoint;
+  };
+
   const fetchBulletins = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/bulletins');
+      const response = await fetch(getApiUrl('/api/bulletins'));
       if (!response.ok) {
         throw new Error(`HTTP error ${response.status}`);
       }
@@ -41,7 +51,7 @@ function App() {
     setError(null);
 
     try {
-      const response = await fetch('/api/bulletins', {
+      const response = await fetch(getApiUrl('/api/bulletins'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
