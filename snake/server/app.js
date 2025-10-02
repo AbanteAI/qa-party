@@ -47,6 +47,30 @@ app.get('/api/scores', (req, res) => {
   res.json(sortedScores);
 });
 
+app.get('/api/scores/:username', (req, res) => {
+  console.log(
+    `GET /api/scores/${req.params.username} - Fetching user high score`
+  );
+  const scores = getScores();
+
+  // Find all scores for this username and get the highest
+  const userScores = scores.filter(
+    (score) => score.name.toLowerCase() === req.params.username.toLowerCase()
+  );
+
+  if (userScores.length === 0) {
+    console.log(`GET /api/scores/${req.params.username} - No scores found`);
+    return res.json({ username: req.params.username, highScore: null });
+  }
+
+  const highScore = Math.max(...userScores.map((score) => score.score));
+  console.log(
+    `GET /api/scores/${req.params.username} - High score: ${highScore}`
+  );
+
+  res.json({ username: req.params.username, highScore });
+});
+
 app.post('/api/scores', (req, res) => {
   console.log('POST /api/scores - Received score submission');
   console.log('Request body:', req.body);

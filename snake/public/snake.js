@@ -22,6 +22,32 @@ class SnakeGame {
     this.highScore = localStorage.getItem('snakeHighScore') || 0;
     this.gameRunning = false;
     this.gameStarted = false;
+    this.currentFact = '';
+    this.factDisplayTime = 0;
+
+    // Snake facts array
+    this.snakeFacts = [
+      "🐍 Snakes can't blink! They have transparent scales over their eyes instead of eyelids.",
+      '🐍 The longest snake ever recorded was a reticulated python measuring 32 feet long!',
+      '🐍 Snakes smell with their tongues by collecting chemical information from the air.',
+      '🐍 Some snakes can go up to a year without eating after a large meal.',
+      '🐍 The smallest snake in the world is the thread snake, only 4 inches long!',
+      '🐍 Snakes shed their entire skin in one piece, like taking off a sock.',
+      '🐍 Sea snakes can hold their breath underwater for up to 8 hours.',
+      '🐍 The fastest snake is the black mamba, which can slither at 12 mph.',
+      '🐍 Snakes have flexible jaws that can unhinge to swallow prey larger than their head.',
+      '🐍 Some snakes, like pythons, have heat-sensing organs to detect warm-blooded prey.',
+      '🐍 The king cobra is the longest venomous snake, reaching up to 18 feet.',
+      '🐍 Snakes are found on every continent except Antarctica.',
+      "🐍 A group of snakes is called a 'den', 'nest', or 'pit'.",
+      '🐍 Snakes have been around for over 100 million years!',
+      "🐍 The inland taipan has the most toxic venom, but it's very shy and rarely bites humans.",
+      '🐍 Some snakes can fly! Flying snakes glide between trees by flattening their bodies.',
+      "🐍 Snakes don't have ears, but they can feel vibrations through their jawbones.",
+      '🐍 The heaviest snake is the green anaconda, which can weigh over 500 pounds!',
+      "🐍 Baby snakes are called 'snakelets' or 'neonates'.",
+      '🐍 Some snakes give birth to live young, while others lay eggs.',
+    ];
 
     this.init();
   }
@@ -41,6 +67,9 @@ class SnakeGame {
       this.changeDirection(e);
     });
 
+    // Mobile touch controls
+    this.setupMobileControls();
+
     document.getElementById('submitScore').addEventListener('click', () => {
       this.submitScore();
     });
@@ -55,6 +84,146 @@ class SnakeGame {
         this.submitScore();
       }
     });
+  }
+
+  setupMobileControls() {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+
+    // Touch events for swipe gestures
+    this.canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (!this.gameStarted) {
+        this.startGame();
+      }
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+    });
+
+    this.canvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      if (!this.gameRunning) return;
+
+      const touch = e.changedTouches[0];
+      touchEndX = touch.clientX;
+      touchEndY = touch.clientY;
+
+      this.handleSwipe(touchStartX, touchStartY, touchEndX, touchEndY);
+    });
+
+    // Click/tap controls for desktop and mobile
+    this.canvas.addEventListener('click', (e) => {
+      if (!this.gameStarted) {
+        this.startGame();
+        return;
+      }
+      if (!this.gameRunning) return;
+
+      const rect = this.canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      this.handleCanvasClick(clickX, clickY);
+    });
+
+    // Prevent scrolling when touching the canvas
+    this.canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+    });
+  }
+
+  handleSwipe(startX, startY, endX, endY) {
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+    const minSwipeDistance = 30;
+
+    // Check if swipe is long enough
+    if (
+      Math.abs(deltaX) < minSwipeDistance &&
+      Math.abs(deltaY) < minSwipeDistance
+    ) {
+      return;
+    }
+
+    // Determine swipe direction
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      // Horizontal swipe
+      if (deltaX > 0) {
+        this.changeDirectionByInput('right');
+      } else {
+        this.changeDirectionByInput('left');
+      }
+    } else {
+      // Vertical swipe
+      if (deltaY > 0) {
+        this.changeDirectionByInput('down');
+      } else {
+        this.changeDirectionByInput('up');
+      }
+    }
+  }
+
+  handleCanvasClick(clickX, clickY) {
+    const centerX = this.canvas.width / 2;
+    const centerY = this.canvas.height / 2;
+    const deltaX = clickX - centerX;
+    const deltaY = clickY - centerY;
+
+    // Determine which direction based on click position
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      // Horizontal click
+      if (deltaX > 0) {
+        this.changeDirectionByInput('right');
+      } else {
+        this.changeDirectionByInput('left');
+      }
+    } else {
+      // Vertical click
+      if (deltaY > 0) {
+        this.changeDirectionByInput('down');
+      } else {
+        this.changeDirectionByInput('up');
+      }
+    }
+  }
+
+  changeDirectionByInput(direction) {
+    if (!this.gameRunning) return;
+
+    const goingUp = this.dy === -1;
+    const goingDown = this.dy === 1;
+    const goingRight = this.dx === 1;
+    const goingLeft = this.dx === -1;
+
+    switch (direction) {
+      case 'left':
+        if (!goingRight) {
+          this.dx = -1;
+          this.dy = 0;
+        }
+        break;
+      case 'up':
+        if (!goingDown) {
+          this.dx = 0;
+          this.dy = -1;
+        }
+        break;
+      case 'right':
+        if (!goingLeft) {
+          this.dx = 1;
+          this.dy = 0;
+        }
+        break;
+      case 'down':
+        if (!goingUp) {
+          this.dx = 0;
+          this.dy = 1;
+        }
+        break;
+    }
   }
 
   startGame() {
@@ -105,6 +274,7 @@ class SnakeGame {
       this.moveSnake();
       this.drawFood();
       this.drawSnake();
+      this.drawFact();
 
       if (this.checkGameOver()) {
         this.endGame();
@@ -112,7 +282,7 @@ class SnakeGame {
       }
 
       this.gameLoop();
-    }, 150);
+    }, 40);
   }
 
   clearCanvas() {
@@ -129,6 +299,9 @@ class SnakeGame {
       this.score += 10;
       this.scoreElement.textContent = this.score;
       this.generateFood();
+
+      // Show random snake fact
+      this.showRandomFact();
 
       // Update high score
       if (this.score > this.highScore) {
@@ -291,10 +464,53 @@ class SnakeGame {
     this.draw();
   }
 
+  showRandomFact() {
+    const randomIndex = Math.floor(Math.random() * this.snakeFacts.length);
+    this.currentFact = this.snakeFacts[randomIndex];
+    this.factDisplayTime = Date.now();
+  }
+
+  drawFact() {
+    if (!this.currentFact || Date.now() - this.factDisplayTime > 3000) {
+      this.currentFact = '';
+      return;
+    }
+
+    this.ctx.save();
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    this.ctx.fillRect(10, 10, this.canvas.width - 20, 60);
+
+    this.ctx.fillStyle = '#00ff00';
+    this.ctx.font = '12px Courier New';
+    this.ctx.textAlign = 'left';
+
+    // Word wrap the fact text
+    const words = this.currentFact.split(' ');
+    let line = '';
+    let y = 30;
+
+    for (let i = 0; i < words.length; i++) {
+      const testLine = line + words[i] + ' ';
+      const metrics = this.ctx.measureText(testLine);
+
+      if (metrics.width > this.canvas.width - 40 && i > 0) {
+        this.ctx.fillText(line, 20, y);
+        line = words[i] + ' ';
+        y += 16;
+      } else {
+        line = testLine;
+      }
+    }
+    this.ctx.fillText(line, 20, y);
+
+    this.ctx.restore();
+  }
+
   draw() {
     this.clearCanvas();
     this.drawFood();
     this.drawSnake();
+    this.drawFact();
   }
 }
 

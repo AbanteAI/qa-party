@@ -15,6 +15,9 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [userHighScores, setUserHighScores] = useState<Record<string, number>>(
+    {}
+  );
 
   const scrollToBottom = () => {
     if (
@@ -34,10 +37,44 @@ function App() {
       const data = await response.json();
       setMessages(data);
       setError(null); // Clear any previous errors on successful fetch
+
+      // Fetch high scores for unique usernames
+      await fetchHighScoresForUsers(data);
     } catch (err) {
       console.error('Error fetching messages:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch messages');
     }
+  };
+
+  const fetchHighScoresForUsers = async (messages: ChatMessage[]) => {
+    const uniqueUsernames = [...new Set(messages.map((msg) => msg.username))];
+    const newHighScores: Record<string, number> = {};
+
+    for (const username of uniqueUsernames) {
+      if (userHighScores[username] !== undefined) {
+        // Already have this user's high score
+        newHighScores[username] = userHighScores[username];
+        continue;
+      }
+
+      try {
+        // Try to fetch from snake game API (port 5174)
+        const response = await fetch(
+          `http://localhost:5174/api/scores/${encodeURIComponent(username)}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          if (data.highScore !== null) {
+            newHighScores[username] = data.highScore;
+          }
+        }
+      } catch (err) {
+        // Snake game API might not be available, that's okay
+        console.log(`Could not fetch high score for ${username}:`, err);
+      }
+    }
+
+    setUserHighScores((prev) => ({ ...prev, ...newHighScores }));
   };
 
   const sendMessage = async (e: React.FormEvent) => {
@@ -141,7 +178,17 @@ function App() {
           messages.map((msg) => (
             <div key={msg.id} className="message">
               <span className="timestamp">[{formatTime(msg.timestamp)}]</span>
-              <span className="username">&lt;{msg.username}&gt;</span>
+              <span className="username">
+                &lt;{msg.username}&gt;
+                {userHighScores[msg.username] !== undefined && (
+                  <span
+                    className="high-score"
+                    title={`Snake Game High Score: ${userHighScores[msg.username]}`}
+                  >
+                    🐍{userHighScores[msg.username]}
+                  </span>
+                )}
+              </span>
               <span className="text">{msg.message}</span>
             </div>
           ))
