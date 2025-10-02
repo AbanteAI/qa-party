@@ -87,31 +87,21 @@ class SnakeGame {
   }
 
   setupMobileControls() {
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchEndX = 0;
-    let touchEndY = 0;
-
-    // Touch events for swipe gestures
+    // Touch/tap controls - tap different areas to change direction
     this.canvas.addEventListener('touchstart', (e) => {
       e.preventDefault();
       if (!this.gameStarted) {
         this.startGame();
+        return;
       }
-      const touch = e.touches[0];
-      touchStartX = touch.clientX;
-      touchStartY = touch.clientY;
-    });
-
-    this.canvas.addEventListener('touchend', (e) => {
-      e.preventDefault();
       if (!this.gameRunning) return;
 
-      const touch = e.changedTouches[0];
-      touchEndX = touch.clientX;
-      touchEndY = touch.clientY;
+      const touch = e.touches[0];
+      const rect = this.canvas.getBoundingClientRect();
+      const tapX = touch.clientX - rect.left;
+      const tapY = touch.clientY - rect.top;
 
-      this.handleSwipe(touchStartX, touchStartY, touchEndX, touchEndY);
+      this.handleCanvasClick(tapX, tapY);
     });
 
     // Click/tap controls for desktop and mobile
@@ -133,37 +123,6 @@ class SnakeGame {
     this.canvas.addEventListener('touchmove', (e) => {
       e.preventDefault();
     });
-  }
-
-  handleSwipe(startX, startY, endX, endY) {
-    const deltaX = endX - startX;
-    const deltaY = endY - startY;
-    const minSwipeDistance = 30;
-
-    // Check if swipe is long enough
-    if (
-      Math.abs(deltaX) < minSwipeDistance &&
-      Math.abs(deltaY) < minSwipeDistance
-    ) {
-      return;
-    }
-
-    // Determine swipe direction
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      // Horizontal swipe
-      if (deltaX > 0) {
-        this.changeDirectionByInput('right');
-      } else {
-        this.changeDirectionByInput('left');
-      }
-    } else {
-      // Vertical swipe
-      if (deltaY > 0) {
-        this.changeDirectionByInput('down');
-      } else {
-        this.changeDirectionByInput('up');
-      }
-    }
   }
 
   handleCanvasClick(clickX, clickY) {

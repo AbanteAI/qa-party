@@ -59,9 +59,12 @@ function App() {
 
       try {
         // Try to fetch from snake game API (port 5174)
-        const response = await fetch(
-          `http://localhost:5174/api/scores/${encodeURIComponent(username)}`
-        );
+        // Use the current hostname but with port 5174
+        const hostname = window.location.hostname;
+        const protocol = window.location.protocol;
+        const snakeApiUrl = `${protocol}//${hostname}:5174/api/scores/${encodeURIComponent(username)}`;
+
+        const response = await fetch(snakeApiUrl);
         if (response.ok) {
           const data = await response.json();
           if (data.highScore !== null) {
