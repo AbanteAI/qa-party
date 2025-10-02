@@ -46,5 +46,29 @@
     "username": "jake",
     "message": "hi!",
     "timestamp": "2025-10-02T21:07:01.178Z"
+  },
+  {
+    "id": "1759447328211uk3l0qi99",
+    "username": "Jake",
+    "message": "I don't see my snake high score!",
+    "timestamp": "2025-10-02T23:22:08.211Z"
+  },
+  {
+    "id": "17594473384997vu40dx2q",
+    "username": "jake",
+    "message": "Lower case name",
+    "timestamp": "2025-10-02T23:22:18.499Z"
+  },
+  {
+    "id": "1759447416580o2empiwnz",
+    "username": "jake",
+    "message": "Woah @mentat can you see our messages in the logs?",
+    "timestamp": "2025-10-02T23:23:36.580Z"
+  },
+  {
+    "id": "1759447482564ldefgikvo",
+    "username": "jake",
+    "message": "Test",
+    "timestamp": "2025-10-02T23:24:42.564Z"
   }
 ]

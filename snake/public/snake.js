@@ -408,8 +408,28 @@ class SnakeGame {
 
       if (response.ok) {
         this.loadLeaderboard();
-        this.gameOverElement.style.display = 'none';
+        // Hide the score submission form but keep the Play Again button visible
+        this.playerNameInput.style.display = 'none';
+        document.getElementById('submitScore').style.display = 'none';
         this.playerNameInput.value = '';
+
+        // Show a success message
+        const gameOverDiv = document.getElementById('gameOver');
+        const successMsg =
+          gameOverDiv.querySelector('.success-message') ||
+          document.createElement('p');
+        successMsg.className = 'success-message';
+        successMsg.textContent = '✅ Score submitted successfully!';
+        successMsg.style.color = '#4CAF50';
+        successMsg.style.fontWeight = 'bold';
+        successMsg.style.margin = '10px 0';
+
+        if (!gameOverDiv.querySelector('.success-message')) {
+          gameOverDiv.insertBefore(
+            successMsg,
+            document.getElementById('restartGame')
+          );
+        }
       } else {
         alert('Failed to submit score. Please try again.');
       }
@@ -459,6 +479,16 @@ class SnakeGame {
     // Update UI
     this.scoreElement.textContent = this.score;
     this.gameOverElement.style.display = 'none';
+
+    // Reset form visibility for next game
+    this.playerNameInput.style.display = 'block';
+    document.getElementById('submitScore').style.display = 'inline-block';
+
+    // Remove success message if it exists
+    const successMsg = document.querySelector('.success-message');
+    if (successMsg) {
+      successMsg.remove();
+    }
 
     // Redraw initial state
     this.draw();
