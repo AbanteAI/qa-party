@@ -241,7 +241,7 @@ class SnakeGame {
       }
 
       this.gameLoop();
-    }, 60);
+    }, 75);
   }
 
   clearCanvas() {

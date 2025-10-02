@@ -77,6 +77,17 @@ function App() {
     setUserHighScores((prev) => ({ ...prev, ...newHighScores }));
   };
 
+  // Helper function to determine if a user has the current highest score
+  const isCurrentChampion = (username: string): boolean => {
+    const userScore = userHighScores[username];
+    if (!userScore) return false;
+
+    const allScores = Object.values(userHighScores);
+    const maxScore = Math.max(...allScores);
+
+    return userScore === maxScore && userScore > 0;
+  };
+
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -183,9 +194,12 @@ function App() {
                 {userHighScores[msg.username] !== undefined && (
                   <span
                     className="high-score"
-                    title={`Snake Game High Score: ${userHighScores[msg.username]}`}
+                    title={`Snake Game High Score: ${userHighScores[msg.username]}${isCurrentChampion(msg.username) ? ' - Current Champion!' : ''}`}
                   >
                     🐍{userHighScores[msg.username]}
+                    {isCurrentChampion(msg.username) && (
+                      <span className="champion-star">⭐</span>
+                    )}
                   </span>
                 )}
               </span>

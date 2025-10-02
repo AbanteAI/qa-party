@@ -134,6 +134,24 @@ body {
   cursor: help;
 }
 
+.message .champion-star {
+  margin-left: 2px;
+  font-size: 10px;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
 .message .text {
   color: #1f2937;
 }
