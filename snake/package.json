@@ -1,0 +1,21 @@
+{
+  "name": "snake-game",
+  "version": "1.0.0",
+  "description": "Classic Snake Game with Global Leaderboard",
+  "main": "server/app.js",
+  "scripts": {
+    "start": "node server/app.js",
+    "dev": "node server/app.js"
+  },
+  "keywords": [
+    "snake",
+    "game",
+    "leaderboard",
+    "canvas"
+  ],
+  "author": "Mentat AI",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

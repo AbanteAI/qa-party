@@ -16,5 +16,35 @@
     "username": "ProxyTest",
     "message": "Testing through Vite proxy",
     "timestamp": "2025-09-25T06:07:05.906Z"
+  },
+  {
+    "id": "1759378067287oi9xwo1xv",
+    "username": "granawkins",
+    "message": "can you hear me",
+    "timestamp": "2025-10-02T04:07:47.287Z"
+  },
+  {
+    "id": "1759392216273gszvke1gf",
+    "username": "granawkins",
+    "message": "Ok excellent, we're going",
+    "timestamp": "2025-10-02T08:03:36.273Z"
+  },
+  {
+    "id": "175939230691467wqvxvly",
+    "username": "granawkins",
+    "message": "As long as the server stays running, the messages should stay put",
+    "timestamp": "2025-10-02T08:05:06.914Z"
+  },
+  {
+    "id": "17594194918238w9fm525z",
+    "username": "Scott",
+    "message": "Hey everyone!",
+    "timestamp": "2025-10-02T15:38:11.823Z"
+  },
+  {
+    "id": "1759439221178g37gip6ko",
+    "username": "jake",
+    "message": "hi!",
+    "timestamp": "2025-10-02T21:07:01.178Z"
   }
 ]
