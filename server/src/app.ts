@@ -114,6 +114,40 @@ app.get('/api', (req: Request, res: Response) => {
   res.json({ message: 'Welcome to the Mentat Party Chatroom API!' });
 });
 
+// Proxy endpoint to get snake game high scores
+app.get('/api/snake-scores/:username', async (req: Request, res: Response) => {
+  try {
+    console.log(
+      `GET /api/snake-scores/${req.params.username} - Proxying to snake game API`
+    );
+
+    // Try to fetch from snake game API on localhost:5174
+    const response = await fetch(
+      `http://localhost:5174/api/scores/${encodeURIComponent(req.params.username)}`
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log(
+        `GET /api/snake-scores/${req.params.username} - Success:`,
+        data
+      );
+      res.json(data);
+    } else {
+      console.log(
+        `GET /api/snake-scores/${req.params.username} - Snake API returned ${response.status}`
+      );
+      res.json({ username: req.params.username, highScore: null });
+    }
+  } catch (error) {
+    console.error(
+      `GET /api/snake-scores/${req.params.username} - Error:`,
+      error
+    );
+    res.json({ username: req.params.username, highScore: null });
+  }
+});
+
 // Serve React app or fallback page
 app.get('*', (req: Request, res: Response) => {
   const indexPath = path.join(CLIENT_DIST_PATH, 'index.html');
