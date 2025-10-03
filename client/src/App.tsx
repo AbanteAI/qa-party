@@ -6,6 +6,7 @@ interface ChatMessage {
   username: string;
   message: string;
   timestamp: string;
+  reactions?: Record<string, string[]>; // emoji -> array of usernames who reacted
 }
 
 function App() {
@@ -153,6 +154,86 @@ function App() {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const addReaction = async (messageId: string, emoji: string) => {
+    if (!username.trim() || !password.trim()) {
+      setError('Username and password required to react');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/messages/${messageId}/reactions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          emoji,
+          username: username.trim(),
+          password: password.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add reaction');
+      }
+
+      // Refresh messages to show new reaction
+      await fetchMessages();
+    } catch (err) {
+      console.error('Error adding reaction:', err);
+      setError(err instanceof Error ? err.message : 'Failed to add reaction');
+    }
+  };
+
+  const removeReaction = async (messageId: string, emoji: string) => {
+    if (!username.trim() || !password.trim()) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/messages/${messageId}/reactions`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          emoji,
+          username: username.trim(),
+          password: password.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to remove reaction');
+      }
+
+      // Refresh messages to show updated reactions
+      await fetchMessages();
+    } catch (err) {
+      console.error('Error removing reaction:', err);
+      setError(
+        err instanceof Error ? err.message : 'Failed to remove reaction'
+      );
+    }
+  };
+
+  const toggleReaction = async (messageId: string, emoji: string) => {
+    const message = messages.find((msg) => msg.id === messageId);
+    if (!message || !message.reactions) {
+      await addReaction(messageId, emoji);
+      return;
+    }
+
+    const userReacted = message.reactions[emoji]?.includes(username.trim());
+    if (userReacted) {
+      await removeReaction(messageId, emoji);
+    } else {
+      await addReaction(messageId, emoji);
+    }
+  };
+
   useEffect(() => {
     fetchMessages();
 
@@ -206,6 +287,41 @@ function App() {
                 )}
               </span>
               <span className="text">{msg.message}</span>
+
+              {/* Reactions */}
+              <div className="reactions-container">
+                {/* Display existing reactions */}
+                {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                  <div className="reactions">
+                    {Object.entries(msg.reactions).map(([emoji, users]) => (
+                      <button
+                        key={emoji}
+                        className={`reaction ${users.includes(username.trim()) ? 'user-reacted' : ''}`}
+                        onClick={() => toggleReaction(msg.id, emoji)}
+                        title={`${users.join(', ')} reacted with ${emoji}`}
+                      >
+                        {emoji} {users.length}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Quick reaction buttons */}
+                {username.trim() && password.trim() && (
+                  <div className="quick-reactions">
+                    {['👍', '❤️', '😂', '🎉', '🔥'].map((emoji) => (
+                      <button
+                        key={emoji}
+                        className="quick-reaction"
+                        onClick={() => toggleReaction(msg.id, emoji)}
+                        title={`React with ${emoji}`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           ))
         )}

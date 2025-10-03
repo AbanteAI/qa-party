@@ -16,6 +16,7 @@ interface ChatMessage {
   username: string;
   message: string;
   timestamp: string;
+  reactions?: Record<string, string[]>; // emoji -> array of usernames who reacted
 }
 
 // User interface for authentication
@@ -229,6 +230,105 @@ app.get('/api/snake-scores/:username', async (req: Request, res: Response) => {
     res.json({ username: req.params.username, highScore: null });
   }
 });
+
+// Add reaction to a message
+app.post(
+  '/api/messages/:messageId/reactions',
+  (req: Request, res: Response) => {
+    const { messageId } = req.params;
+    const { emoji, username, password } = req.body;
+
+    if (!emoji || !username || !password) {
+      return res
+        .status(400)
+        .json({ error: 'Emoji, username, and password are required' });
+    }
+
+    // Validate user password
+    if (!validatePassword(username, password)) {
+      return res
+        .status(401)
+        .json({ error: 'Invalid password for this username' });
+    }
+
+    try {
+      const messages = getMessages();
+      const message = messages.find((msg) => msg.id === messageId);
+
+      if (!message) {
+        return res.status(404).json({ error: 'Message not found' });
+      }
+
+      // Initialize reactions if not exists
+      if (!message.reactions) {
+        message.reactions = {};
+      }
+
+      // Initialize emoji array if not exists
+      if (!message.reactions[emoji]) {
+        message.reactions[emoji] = [];
+      }
+
+      // Add user to reaction if not already there
+      if (!message.reactions[emoji].includes(username)) {
+        message.reactions[emoji].push(username);
+      }
+
+      saveMessages(messages);
+      res.json({ success: true, reactions: message.reactions });
+    } catch (error) {
+      console.error('Error adding reaction:', error);
+      res.status(500).json({ error: 'Failed to add reaction' });
+    }
+  }
+);
+
+// Remove reaction from a message
+app.delete(
+  '/api/messages/:messageId/reactions',
+  (req: Request, res: Response) => {
+    const { messageId } = req.params;
+    const { emoji, username, password } = req.body;
+
+    if (!emoji || !username || !password) {
+      return res
+        .status(400)
+        .json({ error: 'Emoji, username, and password are required' });
+    }
+
+    // Validate user password
+    if (!validatePassword(username, password)) {
+      return res
+        .status(401)
+        .json({ error: 'Invalid password for this username' });
+    }
+
+    try {
+      const messages = getMessages();
+      const message = messages.find((msg) => msg.id === messageId);
+
+      if (!message || !message.reactions || !message.reactions[emoji]) {
+        return res.status(404).json({ error: 'Message or reaction not found' });
+      }
+
+      // Remove user from reaction
+      message.reactions[emoji] = message.reactions[emoji].filter(
+        (user) => user !== username
+      );
+
+      // Remove emoji if no users left
+      if (message.reactions[emoji].length === 0) {
+        delete message.reactions[emoji];
+      }
+
+      saveMessages(messages);
+      res.json({ success: true, reactions: message.reactions });
+    } catch (error) {
+      console.error('Error removing reaction:', error);
+      res.status(500).json({ error: 'Failed to remove reaction' });
+    }
+  }
+);
 
 // Serve React app or fallback page
 app.get('*', (req: Request, res: Response) => {
