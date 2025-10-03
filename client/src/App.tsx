@@ -11,6 +11,7 @@ interface ChatMessage {
 function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [currentMessage, setCurrentMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,8 +94,8 @@ function App() {
 
     console.log('Send message called', { username, currentMessage });
 
-    if (!username.trim() || !currentMessage.trim()) {
-      console.log('Message blocked: empty username or message');
+    if (!username.trim() || !currentMessage.trim() || !password.trim()) {
+      console.log('Message blocked: empty username, message, or password');
       return;
     }
 
@@ -107,6 +108,7 @@ function App() {
       const requestBody = {
         username: username.trim(),
         message: currentMessage.trim(),
+        password: password.trim(),
       };
 
       console.log('Making POST request to:', requestUrl);
@@ -222,6 +224,14 @@ function App() {
             maxLength={20}
           />
           <input
+            type="password"
+            placeholder="Password (set on first use)"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="password-input"
+            maxLength={50}
+          />
+          <input
             type="text"
             placeholder="Type your message..."
             value={currentMessage}
@@ -232,7 +242,12 @@ function App() {
           />
           <button
             type="submit"
-            disabled={loading || !username.trim() || !currentMessage.trim()}
+            disabled={
+              loading ||
+              !username.trim() ||
+              !currentMessage.trim() ||
+              !password.trim()
+            }
             className="send-button"
           >
             {loading ? '...' : 'Send'}

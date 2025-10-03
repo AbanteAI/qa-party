@@ -2,11 +2,13 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import path from 'path';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { createHash } from 'crypto';
 
 export const app = express();
 export const PORT = process.env.PORT || 5000;
 export const CLIENT_DIST_PATH = path.join(__dirname, '../../client/dist');
 export const MESSAGES_FILE = path.join(__dirname, '../data/messages.json');
+export const USERS_FILE = path.join(__dirname, '../data/users.json');
 
 // Message interface
 interface ChatMessage {
@@ -14,6 +16,13 @@ interface ChatMessage {
   username: string;
   message: string;
   timestamp: string;
+}
+
+// User interface for authentication
+interface User {
+  username: string;
+  passwordHash: string;
+  createdAt: string;
 }
 
 // Ensure data directory exists
@@ -25,6 +34,11 @@ if (!existsSync(dataDir)) {
 // Initialize messages file if it doesn't exist
 if (!existsSync(MESSAGES_FILE)) {
   writeFileSync(MESSAGES_FILE, JSON.stringify([], null, 2));
+}
+
+// Initialize users file if it doesn't exist
+if (!existsSync(USERS_FILE)) {
+  writeFileSync(USERS_FILE, JSON.stringify([], null, 2));
 }
 
 // Helper functions for message storage
@@ -47,6 +61,43 @@ const saveMessages = (messages: ChatMessage[]): void => {
   }
 };
 
+// Helper functions for user management
+const getUsers = (): User[] => {
+  try {
+    const data = readFileSync(USERS_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Error reading users:', error);
+    return [];
+  }
+};
+
+const saveUsers = (users: User[]): void => {
+  try {
+    writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+  } catch (error) {
+    console.error('Error saving users:', error);
+    throw error;
+  }
+};
+
+const hashPassword = (password: string): string => {
+  return createHash('sha256').update(password).digest('hex');
+};
+
+const findUser = (username: string): User | undefined => {
+  const users = getUsers();
+  return users.find(
+    (user) => user.username.toLowerCase() === username.toLowerCase()
+  );
+};
+
+const validatePassword = (username: string, password: string): boolean => {
+  const user = findUser(username);
+  if (!user) return false;
+  return user.passwordHash === hashPassword(password);
+};
+
 // Middleware
 app.use(cors()); // Enable CORS for frontend communication
 app.use(express.json()); // Parse JSON bodies
@@ -65,11 +116,42 @@ app.post('/api/messages', (req: Request, res: Response) => {
   console.log('Request body:', req.body);
   console.log('Request headers:', req.headers);
 
-  const { username, message } = req.body;
+  const { username, message, password } = req.body;
 
   if (!username || !message) {
     console.log('POST /api/messages - Missing username or message');
     return res.status(400).json({ error: 'Username and message are required' });
+  }
+
+  if (!password) {
+    console.log('POST /api/messages - Missing password');
+    return res.status(400).json({ error: 'Password is required' });
+  }
+
+  // Check if user exists
+  const existingUser = findUser(username);
+
+  if (existingUser) {
+    // User exists, validate password
+    if (!validatePassword(username, password)) {
+      console.log('POST /api/messages - Invalid password for existing user');
+      return res
+        .status(401)
+        .json({ error: 'Invalid password for this username' });
+    }
+  } else {
+    // New user, register them
+    const newUser: User = {
+      username: username.trim(),
+      passwordHash: hashPassword(password),
+      createdAt: new Date().toISOString(),
+    };
+
+    const users = getUsers();
+    users.push(newUser);
+    saveUsers(users);
+
+    console.log('POST /api/messages - Registered new user:', username);
   }
 
   const newMessage: ChatMessage = {

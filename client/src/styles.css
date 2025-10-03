@@ -193,6 +193,29 @@ body {
   color: #9ca3af;
 }
 
+.password-input {
+  width: 180px;
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid #d1d5db;
+  color: #1f2937;
+  font-size: 14px;
+  border-radius: 6px;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.password-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.password-input::placeholder {
+  color: #9ca3af;
+}
+
 .message-input {
   flex: 1;
   padding: 10px 12px;
@@ -288,7 +311,8 @@ body {
     gap: 8px;
   }
 
-  .username-input {
+  .username-input,
+  .password-input {
     width: 100%;
   }
 
