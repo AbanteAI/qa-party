@@ -24,6 +24,7 @@ class SnakeGame {
     this.gameStarted = false;
     this.currentFact = '';
     this.factDisplayTime = 0;
+    this.directionChanged = false; // Prevent multiple direction changes per game loop
 
     // Snake facts array
     this.snakeFacts = [
@@ -150,36 +151,43 @@ class SnakeGame {
   }
 
   changeDirectionByInput(direction) {
-    if (!this.gameRunning) return;
+    if (!this.gameRunning || this.directionChanged) return;
 
     const goingUp = this.dy === -1;
     const goingDown = this.dy === 1;
     const goingRight = this.dx === 1;
     const goingLeft = this.dx === -1;
 
+    // Prevent direction changes if snake is stationary (game just started)
+    const isStationary = this.dx === 0 && this.dy === 0;
+
     switch (direction) {
       case 'left':
-        if (!goingRight) {
+        if (!goingRight || isStationary) {
           this.dx = -1;
           this.dy = 0;
+          this.directionChanged = true;
         }
         break;
       case 'up':
-        if (!goingDown) {
+        if (!goingDown || isStationary) {
           this.dx = 0;
           this.dy = -1;
+          this.directionChanged = true;
         }
         break;
       case 'right':
-        if (!goingLeft) {
+        if (!goingLeft || isStationary) {
           this.dx = 1;
           this.dy = 0;
+          this.directionChanged = true;
         }
         break;
       case 'down':
-        if (!goingUp) {
+        if (!goingUp || isStationary) {
           this.dx = 0;
           this.dy = 1;
+          this.directionChanged = true;
         }
         break;
     }
@@ -199,7 +207,7 @@ class SnakeGame {
     const UP_KEY = 38;
     const DOWN_KEY = 40;
 
-    if (!this.gameRunning) return;
+    if (!this.gameRunning || this.directionChanged) return;
 
     const keyPressed = e.keyCode;
     const goingUp = this.dy === -1;
@@ -207,21 +215,28 @@ class SnakeGame {
     const goingRight = this.dx === 1;
     const goingLeft = this.dx === -1;
 
-    if (keyPressed === LEFT_KEY && !goingRight) {
+    // Prevent direction changes if snake is stationary (game just started)
+    const isStationary = this.dx === 0 && this.dy === 0;
+
+    if (keyPressed === LEFT_KEY && (!goingRight || isStationary)) {
       this.dx = -1;
       this.dy = 0;
+      this.directionChanged = true;
     }
-    if (keyPressed === UP_KEY && !goingDown) {
+    if (keyPressed === UP_KEY && (!goingDown || isStationary)) {
       this.dx = 0;
       this.dy = -1;
+      this.directionChanged = true;
     }
-    if (keyPressed === RIGHT_KEY && !goingLeft) {
+    if (keyPressed === RIGHT_KEY && (!goingLeft || isStationary)) {
       this.dx = 1;
       this.dy = 0;
+      this.directionChanged = true;
     }
-    if (keyPressed === DOWN_KEY && !goingUp) {
+    if (keyPressed === DOWN_KEY && (!goingUp || isStationary)) {
       this.dx = 0;
       this.dy = 1;
+      this.directionChanged = true;
     }
   }
 
@@ -229,6 +244,9 @@ class SnakeGame {
     if (!this.gameRunning) return;
 
     setTimeout(() => {
+      // Reset direction change flag at start of each game loop
+      this.directionChanged = false;
+
       this.clearCanvas();
       this.moveSnake();
       this.drawFood();
@@ -434,6 +452,7 @@ class SnakeGame {
     this.score = 0;
     this.gameRunning = false;
     this.gameStarted = false;
+    this.directionChanged = false; // Reset direction change flag
 
     // Update UI
     this.scoreElement.textContent = this.score;
