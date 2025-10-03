@@ -6,7 +6,7 @@ import * as tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
 
 export default [
-  { ignores: ['**/dist/**', '**/node_modules/**'] },
+  { ignores: ['**/dist/**', '**/node_modules/**', 'snake/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

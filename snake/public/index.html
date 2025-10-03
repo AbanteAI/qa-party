@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🐍 Snake Game</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        font-family: 'Courier New', monospace;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        color: white;
+      }
+
+      .game-container {
+        text-align: center;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      }
+
+      h1 {
+        margin: 0 0 20px 0;
+        font-size: 2.5em;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      }
+
+      #gameCanvas {
+        border: 3px solid #fff;
+        border-radius: 10px;
+        background: #000;
+        display: block;
+        margin: 0 auto 20px auto;
+      }
+
+      .score {
+        font-size: 1.5em;
+        margin-bottom: 10px;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+      }
+
+      .controls {
+        margin-bottom: 20px;
+        font-size: 0.9em;
+        opacity: 0.8;
+      }
+
+      .game-over {
+        display: none;
+        background: rgba(255, 0, 0, 0.9);
+        padding: 30px;
+        border-radius: 15px;
+        margin-top: 20px;
+      }
+
+      .game-over h2 {
+        margin: 0 0 20px 0;
+        font-size: 2em;
+      }
+
+      .name-input {
+        padding: 10px;
+        font-size: 1.2em;
+        border: none;
+        border-radius: 5px;
+        margin: 10px;
+        text-align: center;
+        font-family: 'Courier New', monospace;
+      }
+
+      .btn {
+        background: #4caf50;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1.1em;
+        font-family: 'Courier New', monospace;
+        margin: 10px;
+        transition: background 0.3s;
+      }
+
+      .btn:hover {
+        background: #45a049;
+      }
+
+      .btn.restart {
+        background: #2196f3;
+      }
+
+      .btn.restart:hover {
+        background: #1976d2;
+      }
+
+      .leaderboard {
+        margin-top: 30px;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 20px;
+        border-radius: 10px;
+      }
+
+      .leaderboard h3 {
+        margin: 0 0 15px 0;
+        color: #ffd700;
+      }
+
+      .leaderboard-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .leaderboard-list li {
+        padding: 8px;
+        margin: 5px 0;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 5px;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .leaderboard-list li:first-child {
+        background: rgba(255, 215, 0, 0.3);
+        font-weight: bold;
+      }
+
+      .loading {
+        opacity: 0.6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game-container">
+      <h1>🐍 Snake Game</h1>
+
+      <div class="score">Score: <span id="score">0</span></div>
+      <div class="score">High Score: <span id="highScore">0</span></div>
+
+      <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+      <div class="controls">
+        Use arrow keys to control the snake<br />
+        Eat the red food to grow and score points!
+      </div>
+
+      <div id="gameOver" class="game-over">
+        <h2>Game Over! 💀</h2>
+        <p>Your Score: <span id="finalScore">0</span></p>
+        <input
+          type="text"
+          id="playerName"
+          class="name-input"
+          placeholder="Enter your name"
+          maxlength="20"
+        />
+        <br />
+        <button id="submitScore" class="btn">Submit Score</button>
+        <button id="restartGame" class="btn restart">Play Again</button>
+      </div>
+
+      <div class="leaderboard">
+        <h3>🏆 Global Leaderboard</h3>
+        <ul id="leaderboardList" class="leaderboard-list">
+          <li class="loading">Loading leaderboard...</li>
+        </ul>
+      </div>
+    </div>
+
+    <script src="snake.js"></script>
+  </body>
+</html>

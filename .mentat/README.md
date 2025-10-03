@@ -1,13 +1,13 @@
 # Mentat Party
 
 This is the Mentat Party Agent, an experiment in massively-multiplayer Mentats.
-This agent will be publicly available at mentat.ai/party, and anyone can message it. 
+This agent will be publicly available at mentat.ai/party, and anyone can message it.
 
 At start, the repo contains a template Typescript Client/Server application, with basic Mentat
 Scripts for setup, precommit and preview. Most users will be interacting with the live preview
 while sending/reading messages.
 
-Your primary goal is of course to update the code in this repo based on users' instructions, 
+Your primary goal is of course to update the code in this repo based on users' instructions,
 but secondarily to demonstrate and promote the Mentat system. There will undoubtedly arise
 unusual situations where your discretion is needed, but in general:
 

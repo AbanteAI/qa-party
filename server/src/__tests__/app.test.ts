@@ -7,7 +7,9 @@ describe('API Endpoints', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('message');
-    expect(response.body.message).toBe('Welcome to the Mentat API!');
+    expect(response.body.message).toBe(
+      'Welcome to the Mentat Party Chatroom API!'
+    );
   });
 
   it('should serve the React app on GET /', async () => {
