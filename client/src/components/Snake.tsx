@@ -17,7 +17,7 @@ function Snake() {
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const gameLoopRef = useRef<number>();
+  const gameLoopRef = useRef<number | undefined>(undefined);
 
   const generateFood = useCallback((currentSnake: Position[]): Position => {
     let newFood: Position;
