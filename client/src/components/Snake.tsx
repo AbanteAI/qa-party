@@ -72,15 +72,21 @@ function Snake() {
         y: head.y + direction.y,
       };
 
-      if (checkCollision(newHead, prevSnake)) {
+      // Check if food will be eaten
+      const willGrow = newHead.x === food.x && newHead.y === food.y;
+
+      // For collision check, exclude tail if not growing (tail will move)
+      const bodyToCheck = willGrow ? prevSnake : prevSnake.slice(0, -1);
+
+      if (checkCollision(newHead, bodyToCheck)) {
         setGameOver(true);
         return prevSnake;
       }
 
       const newSnake = [newHead, ...prevSnake];
 
-      // Check if food is eaten
-      if (newHead.x === food.x && newHead.y === food.y) {
+      // Handle food consumption and growth
+      if (willGrow) {
         setScore((prev) => prev + 10);
         setFood(generateFood(newSnake));
       } else {
@@ -97,15 +103,19 @@ function Snake() {
 
       switch (e.key) {
         case 'ArrowUp':
+          e.preventDefault();
           if (direction.y === 0) setDirection({ x: 0, y: -1 });
           break;
         case 'ArrowDown':
+          e.preventDefault();
           if (direction.y === 0) setDirection({ x: 0, y: 1 });
           break;
         case 'ArrowLeft':
+          e.preventDefault();
           if (direction.x === 0) setDirection({ x: -1, y: 0 });
           break;
         case 'ArrowRight':
+          e.preventDefault();
           if (direction.x === 0) setDirection({ x: 1, y: 0 });
           break;
         case ' ':
