@@ -210,50 +210,54 @@ function Snake() {
         )}
       </div>
 
-      <canvas
-        ref={canvasRef}
-        width={GRID_SIZE * CELL_SIZE}
-        height={GRID_SIZE * CELL_SIZE}
-        style={{
-          border: '2px solid #374151',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        }}
-      />
-
-      {gameOver && (
-        <div
+      <div style={{ position: 'relative' }}>
+        <canvas
+          ref={canvasRef}
+          width={GRID_SIZE * CELL_SIZE}
+          height={GRID_SIZE * CELL_SIZE}
           style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            backgroundColor: 'rgba(0, 0, 0, 0.9)',
-            padding: '30px',
-            borderRadius: '12px',
-            textAlign: 'center',
+            border: '2px solid #374151',
+            borderRadius: '8px',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
           }}
-        >
-          <h2 style={{ color: '#ef4444', marginBottom: '10px' }}>Game Over!</h2>
-          <p style={{ fontSize: '20px', marginBottom: '20px' }}>
-            Final Score: {score}
-          </p>
-          <button
-            onClick={resetGame}
+        />
+
+        {gameOver && (
+          <div
             style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              backgroundColor: '#22c55e',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              backgroundColor: 'rgba(0, 0, 0, 0.9)',
+              padding: '30px',
+              borderRadius: '12px',
+              textAlign: 'center',
             }}
           >
-            Play Again
-          </button>
-        </div>
-      )}
+            <h2 style={{ color: '#ef4444', marginBottom: '10px' }}>
+              Game Over!
+            </h2>
+            <p style={{ fontSize: '20px', marginBottom: '20px' }}>
+              Final Score: {score}
+            </p>
+            <button
+              onClick={resetGame}
+              style={{
+                padding: '10px 20px',
+                fontSize: '16px',
+                backgroundColor: '#22c55e',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+              }}
+            >
+              Play Again
+            </button>
+          </div>
+        )}
+      </div>
 
       <div
         style={{

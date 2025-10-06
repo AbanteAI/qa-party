@@ -1,7 +1,39 @@
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import mentatLogo from '/mentat.png';
 
 function Home() {
+  const [message, setMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchBackendMessage = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch('/api');
+
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
+
+        const data = await response.json();
+        setMessage(data.message);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError(
+          err instanceof Error ? err.message : 'An unknown error occurred'
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBackendMessage();
+  }, []);
+
   return (
     <div
       style={{
@@ -77,6 +109,25 @@ function Home() {
             >
               🐍 Play Snake
             </Link>
+          </div>
+        </div>
+
+        <div className="section">
+          <h2 style={{ fontSize: '18px', marginBottom: '12px' }}>
+            🔌 Server Status
+          </h2>
+          <div style={{ fontSize: '14px', color: '#1f2937' }}>
+            {loading ? (
+              'Connecting to server...'
+            ) : error ? (
+              <span style={{ color: '#dc2626' }}>Error: {error}</span>
+            ) : message ? (
+              <span style={{ color: '#22c55e' }}>✓ {message}</span>
+            ) : (
+              <span style={{ color: '#6b7280', fontStyle: 'italic' }}>
+                No response from server
+              </span>
+            )}
           </div>
         </div>
 
